@@ -27,6 +27,7 @@
 
     {% if label_annotations %}
 
+      <h2>Video Analysis Results:</h2>
       <table>
         <tr>
           <th>Label Description</th>
@@ -37,20 +38,14 @@
 
     {% endif %}
 
-    {% for label in label_annotations %}
+    {% for index in data %}
 
         <tr>
-          <th>{{label.entity.description}}</th>
-          <th>{{label.segments[0].confidence}}</th>
-          <th>{{label.segments[0].segment.start_time_offset.seconds + label.segments[0].segment.start_time_offset.nanos / 1000000000.0}}</th>
-          <th>{{label.segments[0].segment.end_time_offset.seconds + label.segments[0].segment.end_time_offset.nanos / 1000000000.0}}</th>
+	  <td><center>{{index.key}}</center></td>
+	  <td><center>{{index.value}}</center></td>
+	  <td><center>{{index.start_time}}</center></td>
+	  <td><center>{{index.end_time}}</center></td>
         </tr>
-
-      <!--p><b>Label Description:</b> {{label.entity.description}}</p-->
-      <!--p><b>Label Confidence:</b> {{label.segments[0].confidence}}</p-->
-      <!--p><b>Label Start Time:</b> {{label.segments[0].segment.start_time_offset.seconds + label.segments[0].segment.start_time_offset.nanos / 1000000000.0}}</p-->
-      <!--p><b>Label End Time:</b> {{label.segments[0].segment.end_time_offset.seconds + label.segments[0].segment.end_time_offset.nanos / 1000000000.0}}</p-->
-      <!--br-->
     {% endfor %}
 
     {% if label_annotations %}
@@ -60,13 +55,13 @@
     {% endif %}
 
     {% if results %}
-      <h2>Results:</h2>
-
-      {% for result in results %}
-        <p><b>Transcript:</b> {{result.alternatives[0].transcript}}</p>
-          <p><b>Confidence:</b> {{result.alternatives[0].confidence}}</p>
+      <h2>Speech Results:</h2>
+      
+     {% for result in results %}
+       <p><strong>Transcript: </strong>{{result.alternatives[0].transcript}}</p>
+       <p><strong>Confidence: </strong>{{result.alternatives[0].confidence}}</p>
       {% endfor %}
-
+      
       <br>
     {% endif %}
   </body>

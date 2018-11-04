@@ -11,7 +11,14 @@ from google.cloud.speech import types
 
 app = Flask(__name__)
 
-data = dict()
+class AnalyzeData:
+    def __init__(self, key, value, start_time, end_time):
+        self.key = key
+        self.value = value
+        self.start_time = start_time
+        self.end_time = end_time
+
+datum = []
 
 @app.route('/')
 def homepage():
@@ -37,9 +44,9 @@ def transcribe_audio(gcs_uri):
     client = speech.SpeechClient()
 
     # Create audio and config objects that you'll need to call the API.
-    audio = types.RecognitionAudio(uri=gcs_uri)
-    config = types.RecognitionConfig(
-        encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+    audio = speech.types.RecognitionAudio(uri=gcs_uri)
+    config = speech.types.RecognitionConfig(
+        encoding=speech.enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=16000,
         language_code='en-US')
 
@@ -73,18 +80,26 @@ def upload():
     videosource_uri = 'gs://{}/{}'.format(os.environ.get('CLOUD_STORAGE_BUCKET'), videoblob.name)
     label_annotations = get_label_annotations(videosource_uri)
 
-    # sort label_annotations
+    # Add labels and their corresponding information to a class called AnalyzeData
     for label in label_annotations:
-        start_time = label.segment.start_time_offset.seconds
-        end_time = label.segment.end_time_offset.nanos / 1000000000.0
-        data[label.entity.description] = label.segments[0].confidence
+        start_time = label.segments[0].segment.start_time_offset.seconds - (label.segments[0].segment.start_time_offset.nanos / 1000000000.0)
+        end_time = label.segments[0].segment.end_time_offset.seconds - (label.segments[0].segment.end_time_offset.nanos / 1000000000.0)
+        newConfidence = label.segments[0].confidence * (end_time - start_time) / end_time
+        analyzeData = AnalyzeData(label.entity.description, newConfidence, start_time, end_time)
+        datum.append(analyzeData)
     
+    # Sort "data" list by value (AKA confidence)
+    def getKey(datum):
+        return datum.value
+
+    data = sorted(datum, key = getKey, reverse = True)
+
     audiosource_uri = 'gs://{}/{}'.format(os.environ.get('CLOUD_STORAGE_BUCKET'), audioblob.name)
     response = transcribe_audio(audiosource_uri)
     results = response.results
 
     # Redirect to the home page.
-    return render_template('homepage.html', video_public_url=video_public_url, video_content_type=video.content_type, data=data, results=results)
+    return render_template('homepage.html', video_public_url=video_public_url, video_content_type=video.content_type, label_annotations=label_annotations, data=data, results=results)
 
 @app.errorhandler(500)
 def server_error(e):
