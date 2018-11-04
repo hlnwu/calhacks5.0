@@ -11,6 +11,7 @@ from google.cloud.speech import types
 
 app = Flask(__name__)
 
+data = dict()
 
 @app.route('/')
 def homepage():
@@ -72,12 +73,18 @@ def upload():
     videosource_uri = 'gs://{}/{}'.format(os.environ.get('CLOUD_STORAGE_BUCKET'), videoblob.name)
     label_annotations = get_label_annotations(videosource_uri)
 
+    # sort label_annotations
+    for label in label_annotations:
+        start_time = label.segment.start_time_offset.seconds
+        end_time = label.segment.end_time_offset.nanos / 1000000000.0
+        data[label.entity.description] = label.segments[0].confidence
+    
     audiosource_uri = 'gs://{}/{}'.format(os.environ.get('CLOUD_STORAGE_BUCKET'), audioblob.name)
     response = transcribe_audio(audiosource_uri)
     results = response.results
 
     # Redirect to the home page.
-    return render_template('homepage.html', video_public_url=video_public_url, video_content_type=video.content_type, label_annotations=label_annotations, results=results)
+    return render_template('homepage.html', video_public_url=video_public_url, video_content_type=video.content_type, data=data, results=results)
 
 @app.errorhandler(500)
 def server_error(e):
