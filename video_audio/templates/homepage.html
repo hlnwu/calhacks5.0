@@ -1,0 +1,49 @@
+<h1>Google Cloud Platform - Video Sample</h1>
+
+<p>This Python Flask application demonstrates App Engine Flexible and the Cloud Video API</p>
+
+<br>
+
+<html>
+  <body>
+    <form action="upload" method="POST" enctype="multipart/form-data">
+      Upload Video File: <input type="file" name="videofile" accept=".mp4"><br>
+      Upload Audio File (try a file in the gcp-hackathon-demos/speech/resources folder): <input type="file" name="audiofile" accept=".wav"><br>
+      <input type="submit" name="submit" value="Submit">
+    </form>
+
+    {% if video_public_url %}
+      <br>
+      <p><b>Video being served from Google Cloud Storage:</b></p>
+      <video width="320" height="240" controls>
+        <source src="{{video_public_url}}" type="{{video_content_type}}">
+        Your browser does not support the video tag.
+      </video>
+      <br>
+      <br>
+
+      <table>
+
+    {% endif %}
+
+    {% for label in label_annotations %}
+      <p><b>Label Description:</b> {{label.entity.description}}</p>
+      <p><b>Label Confidence:</b> {{label.segments[0].confidence}}</p>
+      <p><b>Label Start Time:</b> {{label.segments[0].segment.start_time_offset.seconds + label.segments[0].segment.start_time_offset.nanos / 1000000000.0}}</p>
+      <p><b>Label End Time:</b> {{label.segments[0].segment.end_time_offset.seconds + label.segments[0].segment.end_time_offset.nanos / 1000000000.0}}</p>
+      <br>
+    {% endfor %}
+
+
+    {% if results %}
+      <h2>Results:</h2>
+
+      {% for result in results %}
+        <p><b>Transcript:</b> {{result.alternatives[0].transcript}}</p>
+          <p><b>Confidence:</b> {{result.alternatives[0].confidence}}</p>
+      {% endfor %}
+
+      <br>
+    {% endif %}
+  </body>
+</html>
